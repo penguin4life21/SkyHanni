@@ -48,7 +48,6 @@ object MiningEventDisplay {
             add(Renderable.string("§cSwap servers to try again!"))
         }
 
-        // Sorting the island event data with priority: Dwarven Mines first, Crystal Hollows second
         val sortedIslandEventData = islandEventData.toSortedMap { island1, island2 ->
             when {
                 island1 == IslandType.DWARVEN_MINES -> -1
@@ -83,7 +82,6 @@ object MiningEventDisplay {
             add(Renderable.horizontalContainer(listOf(islandName) + upcomingEvents, 3))
         }
     }
-
 
     private fun getIslandIcon(islandType: IslandType) = listOf(
         when (islandType) {
