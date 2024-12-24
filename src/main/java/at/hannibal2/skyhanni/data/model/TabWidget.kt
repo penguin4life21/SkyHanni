@@ -1,5 +1,6 @@
 package at.hannibal2.skyhanni.data.model
 
+import at.hannibal2.skyhanni.api.event.HandleEvent
 import at.hannibal2.skyhanni.events.LorenzWorldChangeEvent
 import at.hannibal2.skyhanni.events.RepositoryReloadEvent
 import at.hannibal2.skyhanni.events.SecondPassedEvent
@@ -117,6 +118,10 @@ enum class TabWidget(
     COOP(
         // language=RegExp
         "(?:§.)*Coop (?:§.)*.*",
+    ),
+    ISLAND(
+        // language=RegExp
+        "(?:§.)*Island",
     ),
     MINION(
         // language=RegExp
@@ -258,6 +263,10 @@ enum class TabWidget(
         // language=RegExp
         "(?:§.)*Pests:",
     ),
+    PEST_TRAPS(
+        // language=RegExp
+        "(?:§.)*Pest Traps: (?:§.)*(?<count>\\d+)/(?<max>\\d+)",
+    ),
     VISITORS(
         // language=RegExp
         "(?:§.)*Visitors: (?:§.)*\\((?<count>\\d+)\\)",
@@ -315,8 +324,7 @@ enum class TabWidget(
     EVENT_TRACKERS(
         // language=RegExp
         "§e§lEvent Trackers:",
-    )
-
+    ),
     ;
 
     /** The pattern for the first line of the widget*/
@@ -331,6 +339,7 @@ enum class TabWidget(
 
     /** Both are inclusive */
     var boundary = -1 to -1
+        private set
 
     /** Is this widget currently visible in the tab list */
     var isActive: Boolean = false
@@ -350,12 +359,12 @@ enum class TabWidget(
         if (lines == this.lines) return
         this.lines = lines
         isActive = true
-        WidgetUpdateEvent(this, lines).postAndCatch()
+        WidgetUpdateEvent(this, lines).post()
     }
 
     private fun postClearEvent() {
         lines = emptyList()
-        WidgetUpdateEvent(this, lines).postAndCatch()
+        WidgetUpdateEvent(this, lines).post()
     }
 
     /** Update the state of the widget, posts the clear if [isActive] == true && [gotChecked] == false */
@@ -394,7 +403,7 @@ enum class TabWidget(
             ChatUtils.debug("Forcefully Updated Widgets")
         }
 
-        @SubscribeEvent(priority = EventPriority.HIGH)
+        @HandleEvent(priority = HandleEvent.HIGH)
         fun onTabListUpdate(event: TabListUpdateEvent) {
             if (!LorenzUtils.inSkyBlock) {
                 if (separatorIndexes.isNotEmpty()) {

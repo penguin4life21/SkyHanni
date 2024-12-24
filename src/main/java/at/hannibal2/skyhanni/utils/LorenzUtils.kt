@@ -277,13 +277,7 @@ object LorenzUtils {
     fun GuiContainerEvent.SlotClickEvent.makeShiftClick() {
         if (this.clickedButton == 1 && slot?.stack?.getItemCategoryOrNull() == ItemCategory.SACK) return
         slot?.slotNumber?.let { slotNumber ->
-            Minecraft.getMinecraft().playerController.windowClick(
-                container.windowId,
-                slotNumber,
-                0,
-                1,
-                Minecraft.getMinecraft().thePlayer,
-            )
+            InventoryUtils.clickSlot(slotNumber, container.windowId, 0, 1)
             this.cancel()
         }
     }
@@ -319,10 +313,9 @@ object LorenzUtils {
     inline fun <reified T : Enum<T>> T.isAnyOf(vararg array: T): Boolean = array.contains(this)
 
     fun shutdownMinecraft(reason: String? = null) {
-        System.err.println("SkyHanni-${SkyHanniMod.version} forced the game to shutdown.")
-        reason?.let {
-            System.err.println("Reason: $it")
-        }
+        val reasonLine = reason?.let { " Reason: $it" }.orEmpty()
+        System.err.println("SkyHanni-@MOD_VERSION@ ${"forced the game to shutdown.$reasonLine"}")
+
         FMLCommonHandler.instance().handleExit(-1)
     }
 

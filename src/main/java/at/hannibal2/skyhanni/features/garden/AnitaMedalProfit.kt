@@ -1,5 +1,6 @@
 package at.hannibal2.skyhanni.features.garden
 
+import at.hannibal2.skyhanni.api.event.HandleEvent
 import at.hannibal2.skyhanni.config.ConfigUpdaterMigrator
 import at.hannibal2.skyhanni.events.GuiRenderEvent
 import at.hannibal2.skyhanni.events.InventoryCloseEvent
@@ -174,16 +175,15 @@ object AnitaMedalProfit {
 
     @SubscribeEvent
     fun onBackgroundDraw(event: GuiRenderEvent.ChestGuiOverlayRenderEvent) {
-        if (inInventory) {
-            config.medalProfitPos.renderRenderables(
-                display,
-                extraSpace = 5,
-                posLabel = "Anita Medal Profit",
-            )
-        }
+        if (!inInventory || VisitorAPI.inInventory) return
+        config.medalProfitPos.renderRenderables(
+            display,
+            extraSpace = 5,
+            posLabel = "Anita Medal Profit",
+        )
     }
 
-    @SubscribeEvent
+    @HandleEvent
     fun onConfigFix(event: ConfigUpdaterMigrator.ConfigFixEvent) {
         event.move(3, "garden.anitaMedalProfitEnabled", "garden.anitaShop.medalProfitEnabled")
         event.move(3, "garden.anitaMedalProfitPos", "garden.anitaShop.medalProfitPos")
