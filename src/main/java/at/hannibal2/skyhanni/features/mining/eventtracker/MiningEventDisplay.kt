@@ -1,6 +1,7 @@
 package at.hannibal2.skyhanni.features.mining.eventtracker
 
 import at.hannibal2.skyhanni.SkyHanniMod
+import at.hannibal2.skyhanni.api.event.HandleEvent
 import at.hannibal2.skyhanni.config.ConfigUpdaterMigrator
 import at.hannibal2.skyhanni.config.enums.OutsideSbFeature
 import at.hannibal2.skyhanni.config.features.mining.MiningEventConfig
@@ -48,15 +49,15 @@ object MiningEventDisplay {
             add(Renderable.string("§cSwap servers to try again!"))
         }
 
-        val sortedIslandEventData = islandEventData.entries
-            .sortedBy { entry ->
-                when (entry.key) {
-                    IslandType.DWARVEN_MINES -> 0
-                    IslandType.CRYSTAL_HOLLOWS -> 1
-                    else -> Int.MAX_VALUE
-                }
+        val sortedIslandEventData = islandEventData.toSortedMap { island1, island2 ->
+            when {
+                island1 == IslandType.DWARVEN_MINES -> -1
+                island2 == IslandType.DWARVEN_MINES -> 1
+                island1 == IslandType.CRYSTAL_HOLLOWS -> 1
+                island2 == IslandType.CRYSTAL_HOLLOWS -> -1
+                else -> 0
             }
-            .associate { it.key to it.value }
+        }
 
         for ((islandType, eventDetails) in sortedIslandEventData) {
             val shouldShow = when (config.showType) {
@@ -82,7 +83,6 @@ object MiningEventDisplay {
             add(Renderable.horizontalContainer(listOf(islandName) + upcomingEvents, 3))
         }
     }
-
 
     private fun getIslandIcon(islandType: IslandType) = listOf(
         when (islandType) {
@@ -140,7 +140,7 @@ object MiningEventDisplay {
         return (isOnValidMiningLocation || OutsideSbFeature.MINING_EVENT_DISPLAY.isSelected()) && config.enabled
     }
 
-    @SubscribeEvent
+    @HandleEvent
     fun onConfigFix(event: ConfigUpdaterMigrator.ConfigFixEvent) {
         event.transform(46, "mining.miningEvent.compressedFormat") {
             ConfigUtils.migrateBooleanToEnum(it, CompressFormat.COMPACT_TEXT, CompressFormat.DEFAULT)

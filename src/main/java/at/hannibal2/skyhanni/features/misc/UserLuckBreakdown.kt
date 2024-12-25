@@ -1,6 +1,7 @@
 package at.hannibal2.skyhanni.features.misc
 
 import at.hannibal2.skyhanni.SkyHanniMod
+import at.hannibal2.skyhanni.api.event.HandleEvent
 import at.hannibal2.skyhanni.data.ProfileStorageData
 import at.hannibal2.skyhanni.events.GuiContainerEvent
 import at.hannibal2.skyhanni.events.InventoryCloseEvent
@@ -71,7 +72,7 @@ object UserLuckBreakdown {
 
     private val skillOverflowLuck = mutableMapOf<SkillType, Int>()
 
-    @SubscribeEvent
+    @HandleEvent
     fun replaceItem(event: ReplaceItemEvent) {
         if (!config.userluckEnabled) return
         if (event.inventory !is ContainerLocalMenu) return
@@ -103,7 +104,7 @@ object UserLuckBreakdown {
             10 -> event.replace(skillsItem)
             11 -> event.replace(limboItem)
 
-            in validItemSlots -> event.replace(null)
+            in validItemSlots -> event.remove()
 
             in invalidItemSlots -> {
                 if (event.originalItem.item == limboID.getItemStack().item) return

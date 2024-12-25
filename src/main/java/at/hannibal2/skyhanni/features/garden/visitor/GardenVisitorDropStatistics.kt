@@ -1,5 +1,6 @@
 package at.hannibal2.skyhanni.features.garden.visitor
 
+import at.hannibal2.skyhanni.api.event.HandleEvent
 import at.hannibal2.skyhanni.config.ConfigUpdaterMigrator
 import at.hannibal2.skyhanni.config.features.garden.visitor.DropsStatisticsConfig.DropsStatisticsTextEntry
 import at.hannibal2.skyhanni.config.storage.ProfileSpecificStorage
@@ -112,12 +113,12 @@ object GardenVisitorDropStatistics {
         return newList
     }
 
-    @SubscribeEvent
+    @HandleEvent
     fun onProfileJoin(event: ProfileJoinEvent) {
         display = emptyList()
     }
 
-    @SubscribeEvent
+    @HandleEvent
     fun onVisitorAccept(event: VisitorAcceptEvent) {
         if (!GardenAPI.onBarnPlot) return
         if (!ProfileStorageData.loaded) return
@@ -297,7 +298,7 @@ object GardenVisitorDropStatistics {
         )
     }
 
-    @SubscribeEvent
+    @HandleEvent
     fun onConfigLoad(event: ConfigLoadEvent) {
         val storage = GardenAPI.storage?.visitorDrops ?: return
         val visitorRarities = storage.visitorRarities
@@ -325,7 +326,7 @@ object GardenVisitorDropStatistics {
         config.pos.renderStringsAndItems(display, posLabel = "Visitor Stats")
     }
 
-    @SubscribeEvent
+    @HandleEvent
     fun onConfigFix(event: ConfigUpdaterMigrator.ConfigFixEvent) {
         val originalPrefix = "garden.visitorDropsStatistics."
         val newPrefix = "garden.visitors.dropsStatistics."

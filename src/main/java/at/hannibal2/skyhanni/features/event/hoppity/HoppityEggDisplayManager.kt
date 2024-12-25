@@ -1,5 +1,6 @@
 package at.hannibal2.skyhanni.features.event.hoppity
 
+import at.hannibal2.skyhanni.api.event.HandleEvent
 import at.hannibal2.skyhanni.config.features.event.hoppity.HoppityEggsConfig.UnclaimedEggsOrder.SOONEST_FIRST
 import at.hannibal2.skyhanni.data.mob.MobFilter.isRealPlayer
 import at.hannibal2.skyhanni.events.GuiRenderEvent
@@ -7,6 +8,7 @@ import at.hannibal2.skyhanni.events.SecondPassedEvent
 import at.hannibal2.skyhanni.events.SkyHanniRenderEntityEvent
 import at.hannibal2.skyhanni.events.render.EntityRenderLayersEvent
 import at.hannibal2.skyhanni.features.fame.ReminderUtils
+import at.hannibal2.skyhanni.features.inventory.chocolatefactory.ChocolateFactoryAPI.partyModeReplace
 import at.hannibal2.skyhanni.skyhannimodule.SkyHanniModule
 import at.hannibal2.skyhanni.utils.HypixelCommands
 import at.hannibal2.skyhanni.utils.LocationUtils.distanceTo
@@ -59,7 +61,7 @@ object HoppityEggDisplayManager {
         GlStateManager.disableBlend()
     }
 
-    @SubscribeEvent
+    @HandleEvent
     fun onRenderPlayerLayers(event: EntityRenderLayersEvent.Pre<EntityLivingBase>) {
         if (!canChangeOpacity(event.entity)) return
         if (!shouldHidePlayer) return
@@ -78,7 +80,9 @@ object HoppityEggDisplayManager {
 
         val displayList: List<String> = buildList {
             add("§bUnclaimed Eggs:")
-            HoppityEggType.resettingEntries.let { entries ->
+            HoppityEggType.resettingEntries.filter {
+                it.hasRemainingSpawns() // Only show eggs that have future spawns
+            }.let { entries ->
                 if (config.unclaimedEggsOrder == SOONEST_FIRST) entries.sortedBy { it.timeUntil() }
                 else entries
             }.forEach { add("§7 - ${it.formattedName} ${it.timeUntil().format()}") }
@@ -91,7 +95,7 @@ object HoppityEggDisplayManager {
                 val collectedFormat = formatEggsCollected(collectedEggs)
                 add("§7Locations: $collectedFormat$collectedEggs§7/§a$totalEggs")
             }
-        }
+        }.map { it.partyModeReplace() }
 
         if (displayList.size == 1) return emptyList()
 
