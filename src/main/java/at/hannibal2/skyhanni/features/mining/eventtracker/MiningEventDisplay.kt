@@ -48,16 +48,15 @@ object MiningEventDisplay {
             add(Renderable.string("§cSwap servers to try again!"))
         }
 
-        // Sorting the island event data with priority: Dwarven Mines first, Crystal Hollows second
-        val sortedIslandEventData = islandEventData.toSortedMap { island1, island2 ->
-            when {
-                island1 == IslandType.DWARVEN_MINES -> -1
-                island2 == IslandType.DWARVEN_MINES -> 1
-                island1 == IslandType.CRYSTAL_HOLLOWS -> 1
-                island2 == IslandType.CRYSTAL_HOLLOWS -> -1
-                else -> 0
+        val sortedIslandEventData = islandEventData.entries
+            .sortedBy { entry ->
+                when (entry.key) {
+                    IslandType.DWARVEN_MINES -> 0
+                    IslandType.CRYSTAL_HOLLOWS -> 1
+                    else -> Int.MAX_VALUE
+                }
             }
-        }
+            .associate { it.key to it.value }
 
         for ((islandType, eventDetails) in sortedIslandEventData) {
             val shouldShow = when (config.showType) {
