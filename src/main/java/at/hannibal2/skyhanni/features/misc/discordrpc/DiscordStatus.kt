@@ -235,7 +235,28 @@ enum class DiscordStatus(private val displayMessageSupplier: (() -> String?)) {
 
     CUSTOM(
         {
-            DiscordRPCManager.config.customText.get() // custom field in the config
+            var customLine = DiscordRPCManager.config.customText.get() // custom field in the config
+            val replacements = mapof(
+                "purse" to lastKnownDisplayStrings[PURSE].orEmpty(),
+                "user" to LorenzUtils.getPlayerName(),
+                ("level" to AdvancedPlayerList.tabPlayerData[LorenzUtils.getPlayerName()]?.sbLevel?.toString()) ?: "?",
+                "time" to SkyBlockTime.now().formatted().removeColor()
+            )
+
+            val placeholderPattern = RepoPattern("\\$(\\+w)\\$")
+
+            val matcher = placeholderPattern.matcher(customLine)
+            val result = StringBuilder()
+
+            var lastEnd = 0
+            while (matcher.find()) {
+                result.append(customLine, lastEnd, matcher.start())
+                val placeholder = matcher.group(1)
+                result.append((replacements[placeholder] ?: matcher.group(0)).orEmpty())
+                lastEnd = matcher.end()
+            }
+            result.append(customLine, lastEnd, customLine.length)
+            result.toString()
         },
     ),
 
