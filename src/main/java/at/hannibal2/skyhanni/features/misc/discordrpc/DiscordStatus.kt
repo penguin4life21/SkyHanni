@@ -31,6 +31,7 @@ import at.hannibal2.skyhanni.utils.TimeUtils.formatted
 import io.github.moulberry.notenoughupdates.miscfeatures.PetInfoOverlay.getCurrentPet
 import java.util.regex.Pattern
 import kotlin.time.Duration.Companion.minutes
+import kotlin.collections.mapOf
 
 var lastKnownDisplayStrings: MutableMap<DiscordStatus, String> =
     mutableMapOf() // if the displayMessageSupplier is ever a placeholder, return from this instead
@@ -236,26 +237,43 @@ enum class DiscordStatus(private val displayMessageSupplier: (() -> String?)) {
     CUSTOM(
         {
             var customLine = DiscordRPCManager.config.customText.get() // custom field in the config
-            val replacements = mapof(
+
+            // Purse copied directly above from line 117 ish
+            val scoreboard = at.hannibal2.skyhanni.data.ScoreboardData.sidebarLinesFormatted
+            // Matches coins amount in purse or piggy, with optional decimal points
+            val coins = scoreboard.firstOrNull { purseRegex.matches(it.removeColor()) }?.let {
+                purseRegex.find(it.removeColor())?.groupValues?.get(1).orEmpty()
+            }
+
+            val replacements = mapOf(
                 "purse" to lastKnownDisplayStrings[PURSE].orEmpty(),
                 "user" to LorenzUtils.getPlayerName(),
-                ("level" to AdvancedPlayerList.tabPlayerData[LorenzUtils.getPlayerName()]?.sbLevel?.toString()) ?: "?",
-                "time" to SkyBlockTime.now().formatted().removeColor()
+                "level" to (AdvancedPlayerList.tabPlayerData[LorenzUtils.getPlayerName()]?.sbLevel?.toString() ?: "?"),`
             )
-
-            val placeholderPattern = RepoPattern("\\$(\\+w)\\$")
+`
+            val placeholderPattern: Pattern = Pattern.compile("\\$\\{(\\w+)\}")
 
             val matcher = placeholderPattern.matcher(customLine)
             val result = StringBuilder()
 
             var lastEnd = 0
             while (matcher.find()) {
-                result.append(customLine, lastEnd, matcher.start())
+                println("Match found: ${matcher.group(0)}")
+                println("Placeholder detected: ${matcher.group(1)}")
+
+                result.append(customLine.substring(lastEnd, matcher.start()))
                 val placeholder = matcher.group(1)
-                result.append((replacements[placeholder] ?: matcher.group(0)).orEmpty())
+                val replacement = replacements[placeholder]?.toString() ?: matcher.group(0).toString()
+
+                println("Replacement value: $replacement")
+
+                result.append(replacement)
                 lastEnd = matcher.end()
             }
-            result.append(customLine, lastEnd, customLine.length)
+            result.append(customLine.substring(lastEnd))
+
+            println("Final result: $result")
+
             result.toString()
         },
     ),
